@@ -90,16 +90,27 @@ boot_alloc(uint32_t n)
 	// to any kernel code or global variables.
 	if (!nextfree) {
 		extern char end[];
-		nextfree = ROUNDUP((char *) end, PGSIZE);
+		nextfree = ROUNDUP((char *) end, PGSIZE); // Roundup function rounds according to the given functions
 	}
+	
+	if (n==0){
+	return nextfree;
+	}
+
 
 	// Allocate a chunk large enough to hold 'n' bytes, then update
 	// nextfree.  Make sure nextfree is kept aligned
 	// to a multiple of PGSIZE.
 	//
 	// LAB 2: Your code here.
-
-	return NULL;
+	result  = nextfree;
+	nextfree += ROUNDUP(n,PGSIZE);
+	
+	
+	if ((PADDR(nextfree))>npages*PGSIZE){
+		return 0;
+	}
+	return result;
 }
 
 // Set up a two-level page table:
@@ -121,7 +132,7 @@ mem_init(void)
 	i386_detect_memory();
 
 	// Remove this line when you're ready to test this function.
-	panic("mem_init: This function is not finished\n");
+	//panic("mem_init: This function is not finished\n");
 
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
@@ -143,8 +154,11 @@ mem_init(void)
 	// each physical page, there is a corresponding struct PageInfo in this
 	// array.  'npages' is the number of physical pages in memory.  Use memset
 	// to initialize all fields of each struct PageInfo to 0.
-	// Your code goes here:
 
+	//This line creates a boot allocation of memory of the size of number of pages
+	// mulitplied by size of struct Pageinfo to store metadata of the page. 
+	pages = boot_alloc(sizeof(struct PageInfo) * npages);   
+	memset(pages, 0, sizeof(struct PageInfo) * npages); //Clear the memory 
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -248,10 +262,20 @@ page_init(void)
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
 	size_t i;
-	for (i = 0; i < npages; i++) {
+	pages[0].pp_ref = 1;
+	
+	// 2. the rest of base memory 
+	page_free_list = 0 ;
+	
+	for (i = 1; i < npages_basemem; ++i) {
 		pages[i].pp_ref = 0;
-		pages[i].pp_link = page_free_list;
-		page_free_list = &pages[i];
+		pages[i].pp_link = 0;
+
+		if (!page_free_list){		
+		page_free_list = &pages[i-1];	// if page_free_list is 0 then point to current page
+		}
+		else{
+		pages[i-1].pp_link = &pages[i];	//Previous page is linked to this current page
 	}
 }
 
