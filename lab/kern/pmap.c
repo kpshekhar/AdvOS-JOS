@@ -261,22 +261,45 @@ page_init(void)
 	// Change the code to reflect this.
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
-	size_t i;
-	pages[0].pp_ref = 1;
 	
-	// 2. the rest of base memory 
+	size_t i;
+	static struct PageInfo *track; //Keep track from basememory 
+
+	// First mark all pages as used
+	for (i = 1 ; i< npages; i++)
+	{
+	 pages[i].pp_ref = 1; //Used Pages
+	 pages[i].pp_link = 0; // No links to any pages
+	}
+
+	
+	// 2. The rest of base memory 
 	page_free_list = 0 ;
 	
-	for (i = 1; i < npages_basemem; ++i) {
+	for (i = 1; i < npages_basemem; i++) {
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = 0;
 
 		if (!page_free_list){		
-		page_free_list = &pages[i-1];	// if page_free_list is 0 then point to current page
+		page_free_list = &pages[i];	// if page_free_list is 0 then point to current page
 		}
 		else{
-		pages[i-1].pp_link = &pages[i];	//Previous page is linked to this current page
+		pages[i-1].pp_link = &pages[i];
+		}	//Previous page is linked to this current page
 	}
+	cprintf("After for loop 1 value of i = %d\n", i);
+	
+	//3. To cover the IO hole we can skip accross the hole by linking the free memory 
+	track  = &pages[i-1]; // Link to the last but 1 Base_memory page
+	for (i = ROUNDUP(PADDR(boot_alloc(0)), PGSIZE) / PGSIZE; i < npages; ++i) {
+		pages[i].pp_ref = 0;
+		pages[i].pp_link = 0;
+		track->pp_link = &pages[i];
+		track = &pages[i];
+	}
+	
+	cprintf("Check first entry of pages &pages[0] = %x\n", &pages[0]);
+	cprintf("&pages[npages-1] = %x\n", &pages[npages-1]);
 }
 
 //
@@ -294,8 +317,22 @@ page_init(void)
 struct PageInfo *
 page_alloc(int alloc_flags)
 {
-	// Fill this function in
-	return 0;
+	// Check if there is a free_page available 
+	if (!page_free_list)
+	{ 
+	return NULL;
+	}
+	
+	struct PageInfo *allocPage = NULL;   //Create a temporary pointer 
+	allocPage = page_free_list;	//Point to the current head of free_page_list
+	page_free_list = allocPage ->pp_link; //Move the head to the next avaialble page
+
+	if (alloc_flags && ALLOC_ZERO){		//ALLOC_ZERO = 1<<0; which is nothing but  = 1
+	memset(page2kva(allocPage), 0, PGSIZE);  //Clean the entire page and make it 0
+	}
+	
+	allocPage->pp_ref = 0;
+	return allocPage;
 }
 
 //
@@ -307,7 +344,25 @@ page_free(struct PageInfo *pp)
 {
 	// Fill this function in
 	// Hint: You may want to panic if pp->pp_ref is nonzero or
+	
+	if(pp->pp_ref)
+	{
+	panic("Page cannot be returned to free list, as it is still refernced ");
+	return;
+	}
+	
 	// pp->pp_link is not NULL.
+	else if(!pp) 
+	{
+	panic("Page cannot be returned to free list as it is Null");
+	return;
+	}
+	
+       else{
+	pp->pp_link = page_free_list;
+	page_free_list = pp;
+	}
+
 }
 
 //
