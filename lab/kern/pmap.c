@@ -401,8 +401,49 @@ page_decref(struct PageInfo* pp)
 pte_t *
 pgdir_walk(pde_t *pgdir, const void *va, int create)
 {
-	// Fill this function in
-	return NULL;
+	pde_t *pgDir;  //Page directory index variable
+	pte_t *pgTab;  //Page Table index variable
+
+	//To find the index from the pgdir we need to get the MS 10 bits,
+	//We get the MS 10bits of the virtual address by using PDX function (found in inc/mmu.h ) 
+	//#define PDX(la)		((((uintptr_t) (la)) >> PDXSHIFT) & 0x3FF)
+	pgDir = &pgdir[PDX(va)];
+
+	// Check if page is present, PTE_P = 0x1 means page present  
+	if (*pgDir & PTE_P)  {
+		/*Now since we know the index of the pgdir, we need to use the PPN at the 
+		page table entry to get to the final address translation. Now using the pgDir we can use the 
+		PTE_ADDR(pde) function to get the upper 20 bits, but this function returns a physical address. 
+		Since the kernel requires a virtual address, we can use the function KADDR to get the virtual 
+		address.
+		*/
+		pgTab = (pte_t*) KADDR(PTE_ADDR(pgDir));
+	}
+	
+	//If page is not present 
+	else{
+		struct PageInfo *newPage; // Create a holder for a new page
+
+		//if Create = false or page_alloc returns false , then return null.
+ 		if(!create || !(newPage = page_alloc(PGSIZE))){
+			return 0;
+		}
+
+		newPage->pp_ref++;  //Increment the ref pointer of the page 
+		
+		//Now this section creates the bindings and updates all the flags 
+		//for relevant use of the page.
+		
+		//First create a link on the pgTab wrt to the new page
+		pgTab = (pte_t *)page2kva(newPage); // this function gets the virtual address of the new page
+		memset (pgTab, 0, PGSIZE); //Clear the entire page
+
+		/*Page Table, pgTab contains the virtual address , now we need to set the permission bits.
+		The page directory entry contains the 20 bit physical address and also the permission bits,
+		We can set better permissive bits here.*/
+		*pgDir = page2pa(newPage)| PTE_P | PTE_W | PTE_U;  // Set present, writable and user.
+	}
+	return &pgTab[PTX(va)];	//Return the final address of the page table entry.
 }
 
 //
@@ -419,7 +460,25 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
-	// Fill this function in
+	pte_t *pgTbEnt; // Placeholder variable
+	uintptr_t vaBegin = ROUNDDOWN(va, PGSIZE);  //Virtual address pointer 
+	uintptr_t paBegin = ROUNDDOWN(pa, PGSIZE);  //Virtual address pointer for the physical address pointer
+	size = ROUNDUP(size, PGSIZE); 
+
+	//While size is not 0
+	while(!size) {
+		if (!(pgTbEnt = pgdir_walk(pgdir, (const void*)vaBegin, 1))){
+			panic("Cannot find page for the page table entry, from boot_map_region function");
+		}
+		if (*pgTbEnt & PTE_P){
+			panic("Page is already mapped");
+		}
+		
+		*pgTbEnt = paBegin | perm | PTE_P;   //assign the flags
+		vaBegin += PGSIZE;
+		paBegin += PGSIZE; 
+		size -= PGSIZE;
+	} 	
 }
 
 //
@@ -468,8 +527,20 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 struct PageInfo *
 page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 {
-	// Fill this function in
-	return NULL;
+	pte_t *pTe; 
+	
+	pTe = pgdir_walk(pgdir, va , 0);
+
+	//Now check if the page table entry is valid and is present
+	if (!(pTe && (*pTe & PTE_P))){ 
+		cprintf ("The page looked up is not present\n");
+        return NULL; 
+	}
+
+	if (pte_store){
+		*pte_store = pTe;
+	}
+	return pa2page (PTE_ADDR (pTe));
 }
 
 //
@@ -490,7 +561,14 @@ page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 void
 page_remove(pde_t *pgdir, void *va)
 {
-	// Fill this function in
+	pte_t *pte;
+	struct PageInfo *remPage = 0;
+	if (!(remPage = page_lookup(pgdir, va, &pte))) {
+		return;
+	}
+	page_decref(remPage);
+	*pte = 0;
+	tlb_invalidate(pgdir, va);
 }
 
 //
