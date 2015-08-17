@@ -3,44 +3,14 @@
 6828 decimal is 15254 octal!
 Physical memory: 66556K available, base = 640K, extended = 65532K
 After for loop 1 value of i = 160
-Check first entry of pages &pages[0] = f011a000
-&pages[npages-1] = f013a7f0
+Check first entry of pages &pages[0] = f0119000
+&pages[npages-1] = f01397f0
 check_page_free_list(1) ok cleared
 check_page_alloc() succeeded!
 check_page() succeeded!
 check_kern_pgdir() succeeded!
 check_page_free_list(0) ok cleared
 check_page_installed_pgdir() succeeded!
-entering test_backtrace 5
-entering test_backtrace 4
-entering test_backtrace 3
-entering test_backtrace 2
-entering test_backtrace 1
-entering test_backtrace 0
-Stack backtrace:
-ebp f0115f18 eip f0100087 args 00000000 00000000 00000000 00000000 f0102f7c
- kern/init.c:21: test_backtrace+71
-ebp f0115f38 eip f0100069 args 00000000 00000001 f0115f78 00000000 f0102f7c
- kern/init.c:18: test_backtrace+41
-ebp f0115f58 eip f0100069 args 00000001 00000002 f0115f98 00000000 f0102f7c
- kern/init.c:18: test_backtrace+41
-ebp f0115f78 eip f0100069 args 00000002 00000003 00001000 00000000 f0102f7c
- kern/init.c:18: test_backtrace+41
-ebp f0115f98 eip f0100069 args 00000003 00000004 00021000 040ff000 00000000
- kern/init.c:18: test_backtrace+41
-ebp f0115fb8 eip f0100069 args 00000004 00000005 00000000 00010094 00010094
- kern/init.c:18: test_backtrace+41
-ebp f0115fd8 eip f01000ef args 00000005 00001aac 00000670 00000000 00000000
- kern/init.c:44: i386_init+82
-ebp f0115ff8 eip f010003e args 00117021 00000000 00000000 00000000 00000000
- kern/entry.S:83: <unknown>+0
-leaving test_backtrace 0
-leaving test_backtrace 1
-leaving test_backtrace 2
-leaving test_backtrace 3
-leaving test_backtrace 4
-leaving test_backtrace 5
-x 1, y 3, z 4
 Welcome to the JOS kernel monitor!
 Type 'help' for a list of commands.
-qemu: terminating on signal 15 from pid 3903
+qemu: terminating on signal 15 from pid 6733

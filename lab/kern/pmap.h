@@ -8,6 +8,7 @@
 
 #include <inc/memlayout.h>
 #include <inc/assert.h>
+struct Env;
 
 extern char bootstacktop[], bootstack[];
 
@@ -62,15 +63,15 @@ void	page_decref(struct PageInfo *pp);
 
 void	tlb_invalidate(pde_t *pgdir, void *va);
 
-//page2pa returns the relevant physical address of the page
+int	user_mem_check(struct Env *env, const void *va, size_t len, int perm);
+void	user_mem_assert(struct Env *env, const void *va, size_t len, int perm);
+
 static inline physaddr_t
 page2pa(struct PageInfo *pp)
 {
 	return (pp - pages) << PGSHIFT;
 }
 
-
-//this function returns address of the page from the physical address
 static inline struct PageInfo*
 pa2page(physaddr_t pa)
 {
@@ -79,11 +80,10 @@ pa2page(physaddr_t pa)
 	return &pages[PGNUM(pa)];
 }
 
-//This function returns the virtual address of the page.
 static inline void*
 page2kva(struct PageInfo *pp)
 {
-	return KADDR(page2pa(pp));
+	return KADDR(page2pa(pp));  //page2kva returns virtual address of the 
 }
 
 pte_t *pgdir_walk(pde_t *pgdir, const void *va, int create);
