@@ -1,16 +1,19 @@
-*** Now run 'make gdb'.
-***
++ ld obj/kern/kernel
++ mk obj/kern/kernel.img
 6828 decimal is 15254 octal!
 Physical memory: 66556K available, base = 640K, extended = 65532K
-After for loop 1 value of i = 160
-Check first entry of pages &pages[0] = f0119000
-&pages[npages-1] = f01397f0
+Check first entry of pages &pages[0] = f017f000
+&pages[npages-1] = f019f7f0
 check_page_free_list(1) ok cleared
 check_page_alloc() succeeded!
 check_page() succeeded!
 check_kern_pgdir() succeeded!
 check_page_free_list(0) ok cleared
 check_page_installed_pgdir() succeeded!
+[00000000] new env 00001000
+Incoming TRAP frame at 0xefffffb0
+kernel panic at kern/trap.c:233: Fault occured in kernel space on 00000031 
+
 Welcome to the JOS kernel monitor!
 Type 'help' for a list of commands.
-qemu: terminating on signal 15 from pid 6733
+qemu: terminating on signal 15 from pid 13507
