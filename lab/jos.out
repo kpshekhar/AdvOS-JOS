@@ -11,9 +11,11 @@ check_kern_pgdir() succeeded!
 check_page_free_list(0) ok cleared
 check_page_installed_pgdir() succeeded!
 [00000000] new env 00001000
-Incoming TRAP frame at 0xefffffb0
-kernel panic at kern/trap.c:233: Fault occured in kernel space on 00000031 
-
+Incoming TRAP frame at 0xefffffbc
+Incoming TRAP frame at 0xefffffbc
+[00001000] user_mem_check assertion failure for va f010000c
+[00001000] free env 00001000
+Destroyed the only environment - nothing more to do!
 Welcome to the JOS kernel monitor!
 Type 'help' for a list of commands.
-qemu: terminating on signal 15 from pid 13507
+qemu: terminating on signal 15 from pid 15057

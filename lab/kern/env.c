@@ -128,6 +128,7 @@ env_init(void)
 		envs[i-1].env_link = &envs[i];
 		}	//Previous env is linked to this current env
 	}
+	
 
 	// Per-CPU part of the initialization
 	env_init_percpu();
@@ -412,7 +413,7 @@ env_create(uint8_t *binary, enum EnvType type)
 {
 	// LAB 3: Your code here.
 	int r;
-	struct Env *env =NULL;
+	struct Env *env;
 	r = env_alloc( &env, 0);
 	if (r){
 	panic("env_alloc: %e", r);
@@ -543,12 +544,12 @@ env_run(struct Env *e)
 	}
 	
 	//If curenv state is running mode , set it to runnable 
-	if (curenv->env_status == ENV_RUNNING){
+	else if (curenv->env_status == ENV_RUNNING){
 	 curenv->env_status = ENV_RUNNABLE;
 	}
 	curenv = e;	//Set the current environment to the new env
 	curenv->env_status = ENV_RUNNING; //Set it to running state
-	++curenv->env_runs;	// Increment the env_runs counter
+	curenv->env_runs++;	// Increment the env_runs counter
 	lcr3(PADDR(e->env_pgdir));	//Use lcr3 to switch to the env directory
 
 	env_pop_tf(&e->env_tf);

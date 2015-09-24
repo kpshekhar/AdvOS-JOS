@@ -76,7 +76,7 @@ trap_init(void)
   	SETGATE(idt[3],0,GD_KT,int_vector_table[3],3);
 
 	//similarly system call is setup by the user and hence the gate should be checked with 3 
-	SETGATE(idt[T_SYSCALL],0,GD_KT,int_vector_table[T_SYSCALL],3);// T_SYSCALL = 3
+	SETGATE(idt[T_SYSCALL], 0, GD_KT, int_vector_table[T_SYSCALL], 3);// T_SYSCALL = 3
 
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -156,12 +156,25 @@ trap_dispatch(struct Trapframe *tf)
 	// Handle processor exceptions.
 	// LAB 3: Your code here.
 	//call trap_handler function for page_fault
-	if(tf->tf_trapno == T_PGFLT){
-		page_fault_handler(tf);
-	}
-	
-	else if(tf->tf_trapno == T_BRKPT){
-		monitor(tf);
+	switch (tf->tf_trapno) {
+		case T_BRKPT:
+			monitor(tf);
+			cprintf("return from breakpoint....\n");
+			break;
+
+		case T_PGFLT:
+			page_fault_handler(tf);
+			break;
+
+		case T_SYSCALL:
+			tf->tf_regs.reg_eax = syscall(tf->tf_regs.reg_eax,
+							tf->tf_regs.reg_edx,
+							tf->tf_regs.reg_ecx,
+							tf->tf_regs.reg_ebx,
+							tf->tf_regs.reg_edi,
+							tf->tf_regs.reg_esi);
+			//asm volatile("movl %%eax, %0\n" : "=m"(tf->tf_regs.reg_eax) ::);
+			return;
 	}
 
 	// Unexpected trap: The user process or the kernel has a bug.

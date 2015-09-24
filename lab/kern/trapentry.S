@@ -125,7 +125,7 @@ Two-byte SW interrupt             0-255         No
 	TRAPHANDLER_NOEC(handler_18, 18)   // machine check
 	TRAPHANDLER_NOEC(handler_19, 19)   // SIMD floating point error
 
-	TRAPHANDLER_NOEC(handler_48, 48)   // floating point error
+	TRAPHANDLER_NOEC(handler_48, 48)   // system call
 
 /*
  * Lab 3: Your code here for _alltraps
@@ -138,26 +138,26 @@ _alltraps:
 	push %es
 	pushal
 
-	xor %ax, %ax 
+	
 	movw $GD_KD, %ax
 	movw %ax, %ds
 	movw %ax, %es
 
-	#call TRap 
-	push %esp
+	#call Trap 
+	pushl %esp
 	call trap
 
 	#restore operation
-	addl $0x04, %esp
-	popal
-	pop %es
-	pop %ds
+	#addl $0x04, %esp
+	#popal
+	#pop %es
+	#pop %ds
 
-	addl $0x08, %esp
-	iret
+	#addl $0x08, %esp
+	#iret
 
 .data
-.global int_vector_table
+.globl int_vector_table
 int_vector_table:
 	.long handler_0
 	.long handler_1
@@ -181,6 +181,7 @@ int_vector_table:
 	.long handler_19
 	.long 20
 	.long 21
+	.long 22
 	.long 23
 	.long 24
 	.long 25

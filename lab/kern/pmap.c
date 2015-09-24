@@ -192,7 +192,7 @@ mem_init(void)
 	//      (ie. perm = PTE_U | PTE_P)
 	//    - pages itself -- kernel RW, user NONE
 	// Your code goes here:
-	boot_map_region(kern_pgdir, UPAGES, sizeof(struct PageInfo) * npages,PADDR(pages), PTE_U | PTE_P);
+	boot_map_region(kern_pgdir, UPAGES, ROUNDUP( (sizeof(struct PageInfo)*npages),PGSIZE), PADDR(pages), PTE_U | PTE_P);
 	//////////////////////////////////////////////////////////////////////
 	// Map the 'envs' array read-only by the user at linear address UENVS
 	// (ie. perm = PTE_U | PTE_P).
@@ -200,7 +200,7 @@ mem_init(void)
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
-	boot_map_region(kern_pgdir, UENVS, sizeof(struct Env) * NENV,PADDR(envs), PTE_U | PTE_P);
+	boot_map_region(kern_pgdir, UENVS, sizeof(struct Env) * NENV,PADDR(envs), PTE_U);
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
 	// stack.  The kernel stack grows down from virtual address KSTACKTOP.
@@ -655,7 +655,38 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
 	// LAB 3: Your code here.
 
-	return 0;
+	// step 1 : check below ULIM
+  uintptr_t va_beg = (uintptr_t)va;
+  uintptr_t va_end = va_beg + len;
+  if (va_beg >= ULIM || va_end >= ULIM) {
+    user_mem_check_addr = (va_beg >= ULIM) ? va_beg : ULIM;
+    return -E_FAULT;
+  }
+
+  // step 2 : check present & permission
+  uintptr_t va_beg2 = ROUNDDOWN(va_beg, PGSIZE);
+  uintptr_t va_end2 = ROUNDUP(va_end, PGSIZE);
+  while (va_beg2 < va_end2) {
+
+    // check page table is present ?
+    if (!(env->env_pgdir[PDX(va_beg2)] & PTE_P)) {
+      user_mem_check_addr = (va_beg2 > va_beg) ? va_beg2 : va_beg;
+      return -E_FAULT;
+    }
+
+    // get current page table kernel va
+    uint32_t* pt_kva = KADDR(PTE_ADDR(env->env_pgdir[PDX(va_beg2)]));
+
+    // check page is present & permissions
+    if (!((pt_kva[PTX(va_beg2)] & perm) == perm)) {
+      user_mem_check_addr = (va_beg2 > va_beg) ? va_beg2 : va_beg;
+      return -E_FAULT;
+    }
+
+    va_beg2 += PGSIZE;
+  }
+  return 0;
+
 }
 
 //
