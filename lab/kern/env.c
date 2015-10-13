@@ -292,7 +292,9 @@ region_alloc(struct Env *e, void *va, size_t len)
 	
 	while (vaBegin<vaEnd){
 		struct PageInfo *p = page_alloc(0);
-		if (page_insert(e->env_pgdir,p,(void*)vaBegin,PTE_W|PTE_U)){
+		if (p == NULL)
+			panic("Page alloc failed!");
+		else if (page_insert(e->env_pgdir,p,(void*)vaBegin,PTE_W|PTE_U)){
 			panic("Page table couldn't be allocated!!");
 		}
 		vaBegin += PGSIZE;
