@@ -2,20 +2,7 @@
 + mk obj/kern/kernel.img
 6828 decimal is 15254 octal!
 Physical memory: 66556K available, base = 640K, extended = 65532K
-Check first entry of pages &pages[0] = f0180000
-&pages[npages-1] = f01a07f0
-check_page_free_list(1) ok cleared
-check_page_alloc() succeeded!
-check_page() succeeded!
-check_kern_pgdir() succeeded!
-check_page_free_list(0) ok cleared
-check_page_installed_pgdir() succeeded!
-[00000000] new env 00001000
-Incoming TRAP frame at 0xefffffbc
-Incoming TRAP frame at 0xefffffbc
-[00001000] user_mem_check assertion failure for va f010000c
-[00001000] free env 00001000
-Destroyed the only environment - nothing more to do!
-Welcome to the JOS kernel monitor!
-Type 'help' for a list of commands.
-qemu: terminating on signal 15 from pid 7924
+Check first entry of pages &pages[0] = f026d000
+&pages[npages-1] = f028d7f0
+kernel panic on CPU 0 at kern/pmap.c:833: assertion failed: page2pa(pp) != MPENTRY_PADDR
+Welcome to the JOqemu: terminating on signal 15 from pid 10201
