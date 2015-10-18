@@ -276,7 +276,21 @@ mem_init_mp(void)
 	//     Permissions: kernel RW, user NONE
 	//
 	// LAB 4: Your code here:
-
+	
+	//WE can start with CPU 0 to allocate the memory again
+	
+	int i=0;
+	uint32_t percpu_stacktop = KSTACKTOP;
+	//uint32_t percpu_stackbtm;
+	
+	for (i=0;i<NCPU;i++)
+	{	
+		boot_map_region(kern_pgdir, percpu_stacktop - KSTKSIZE, KSTKSIZE,PADDR((void*)percpu_kstacks[i]), PTE_W | PTE_P);
+		percpu_stacktop -= (KSTKSIZE + KSTKGAP);
+	}
+	
+	
+	
 }
 
 // --------------------------------------------------------------
@@ -291,6 +305,8 @@ mem_init_mp(void)
 // allocator functions below to allocate and deallocate physical
 // memory via the page_free_list.
 //
+
+
 void
 page_init(void)
 {
@@ -326,20 +342,29 @@ page_init(void)
 	 pages[i].pp_link = 0; // No links to any pages
 	}
 
-	
+	//Modification for Lab 4, We have to skip the Page that MPENTRY_PADDR is at from the page_free_list
+	//Hence we can divide it with PGSIZE and whatever is the value, just skip that page. 
+	size_t mpentyPg = MPENTRY_PADDR/PGSIZE;
+
 	// 2. The rest of base memory 
 	page_free_list = 0 ;
 	
-	for (i = 1; i < npages_basemem; i++) {
+	struct PageInfo *prev = 0;
+	for (i = 1; i < npages_basemem; ++i) {
+		if (i == mpentyPg) {
+			cprintf("Skipped this page %d\n", i);
+			continue;	
+		}
+
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = 0;
-
-		if (!page_free_list){		
-		page_free_list = &pages[i];	// if page_free_list is 0 then point to current page
+		if (!page_free_list) {
+			page_free_list = &pages[i];
+		} else {
+			prev->pp_link = &pages[i];
+			pages[i-1].pp_link = &pages[i];
 		}
-		else{
-		pages[i-1].pp_link = &pages[i];
-		}	//Previous page is linked to this current page
+		prev = &pages[i];
 	}
 	
 	
@@ -529,9 +554,9 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 		if (!(pgTbEnt = pgdir_walk(pgdir, (const void*)vaBegin, 1))){
 			panic("Cannot find page for the page table entry, from boot_map_region function");
 		}
-		if (*pgTbEnt & PTE_P){
-			panic("Page is already mapped");
-		}
+		//if (*pgTbEnt & PTE_P)
+		//	panic("Page is already mapped");
+		
 		
 		*pgTbEnt = paBegin | perm | PTE_P;   //assign the flags
 		vaBegin += PGSIZE;
@@ -697,7 +722,22 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Hint: The staff solution uses boot_map_region.
 	//
 	// Your code here:
-	panic("mmio_map_region not implemented");
+	//panic("mmio_map_region not implemented");
+	
+	//Since we modify the value of the pointer, copy the value of the pointer into some variable
+	void* save = (void*) base;  // USe a pointer to void, just to store the first address
+	
+	//Roundup size to pgsize
+	size = ROUNDUP(size,PGSIZE);
+	
+	//Use bootmap region to map the given region
+	boot_map_region(kern_pgdir, base, size, pa, PTE_W | PTE_P |PTE_PCD|PTE_PWT);
+	
+	//reserving size bytes of memory
+	base += size;
+	
+	return save; 
+	
 }
 
 static uintptr_t user_mem_check_addr;

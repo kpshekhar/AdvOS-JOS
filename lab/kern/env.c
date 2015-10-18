@@ -578,8 +578,9 @@ env_run(struct Env *e)
 	curenv = e;	//Set the current environment to the new env
 	curenv->env_status = ENV_RUNNING; //Set it to running state
 	curenv->env_runs++;	// Increment the env_runs counter
+	
 	lcr3(PADDR(e->env_pgdir));	//Use lcr3 to switch to the env directory
-
+	unlock_kernel();
 	env_pop_tf(&e->env_tf);
 }
 
