@@ -60,7 +60,12 @@ i386_init(void)
 	ENV_CREATE(TEST, ENV_TYPE_USER);
 #else
 	// Touch all you want.
-	ENV_CREATE(user_primes, ENV_TYPE_USER);
+	//ENV_CREATE(user_primes, ENV_TYPE_USER);
+	ENV_CREATE(user_yield, ENV_TYPE_USER);
+
+	ENV_CREATE(user_yield, ENV_TYPE_USER);
+
+	ENV_CREATE(user_yield, ENV_TYPE_USER);
 #endif // TEST*
 
 	// Schedule and run the first user environment!
@@ -118,7 +123,7 @@ mp_main(void)
 	//
 	// Your code here:
 	lock_kernel();  //Acquire the lock
-	sched_yield(); //Call the sched_yield() function to run different envirenoments in all APs
+	sched_yield(); //Call the sched_yield() function to schedule and run different environments, Exercise 6
 	// Remove this after you finish Exercise 4
 	//for (;;);
 }
