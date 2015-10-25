@@ -366,10 +366,54 @@ page_fault_handler(struct Trapframe *tf)
 
 	// LAB 4: Your code here.
 
-	// Destroy the environment that caused the fault.
-	cprintf("[%08x] user fault va %08x ip %08x\n",
-		curenv->env_id, fault_va, tf->tf_eip);
-	print_trapframe(tf);
-	env_destroy(curenv);
-}
+	//Store the current env's stack tf_esp for use, if the call occurs inside UXtrapframe  
+	const uint32_t cur_tf_esp_addr = (uint32_t)(tf->tf_esp); 	// trap-time esp
 
+	
+
+	// If there is no env_pgfault_upcall or no page fault handler for the curenv follow the original procedure
+	if (!curenv->env_pgfault_upcall)
+	{
+		cprintf("[%08x] user fault va %08x ip %08x\n",
+			curenv->env_id, fault_va, tf->tf_eip);
+		print_trapframe(tf);
+		env_destroy(curenv);	// Destroy the environment that caused the fault.
+	}
+	
+	//Check if the	
+	struct UTrapframe* usertf = NULL; //As defined in inc/trap.h
+	
+	if((cur_tf_esp_addr < UXSTACKTOP) && (cur_tf_esp_addr >=(UXSTACKTOP - PGSIZE)))
+	{
+		//If its already inside the exception stack
+		//Allocate the address by leaving space for 32-bit word
+		usertf = (struct UTrapframe*)(cur_tf_esp_addr - 4 - sizeof(struct UTrapframe));
+	}
+	else
+	{	
+		//If not in the UXSTACK allocate on the UXSTACKTOP
+		usertf = (struct UTrapframe*)(UXSTACKTOP - sizeof(struct UTrapframe));
+	}
+	
+	//Check whether the usertf memory is valid
+	//This function will not return if there is a fault and it will also destroy the environment
+	user_mem_assert(curenv, (void*)usertf, sizeof(struct UTrapframe), PTE_U | PTE_P | PTE_W);
+	
+	
+	// User exeception trapframe
+	usertf->utf_fault_va = fault_va;
+	usertf->utf_err = tf->tf_err;
+	usertf->utf_regs = tf->tf_regs;
+	usertf->utf_eip = tf->tf_eip;
+	usertf->utf_esp = tf->tf_esp;
+	usertf->utf_eflags = tf->tf_eflags;
+	
+	//Setup the tf with Exception stack frame
+	
+	tf->tf_esp= (uintptr_t)usertf;
+	tf->tf_eip = (uintptr_t)curenv->env_pgfault_upcall; 
+
+	env_run(curenv);
+
+
+}
