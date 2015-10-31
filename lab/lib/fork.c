@@ -25,6 +25,10 @@ pgfault(struct UTrapframe *utf)
 	//   (see <inc/memlayout.h>).
 
 	// LAB 4: Your code here.
+	pte_t ft_pte;
+	ft_pte = uvpt[PGNUM(addr)];
+	if (!(err & FEC_WR) || !(ft_pte & PTE_COW) )
+		panic("PGfault: %x does not have write access to copy-on-write page");
 
 	// Allocate a new page, map it at a temporary location (PFTEMP),
 	// copy the data from the old page to the new page, then move the new
@@ -33,8 +37,26 @@ pgfault(struct UTrapframe *utf)
 	//   You should make three system calls.
 
 	// LAB 4: Your code here.
-
-	panic("pgfault not implemented");
+	//Allocate a page to the temp location
+	r = sys_page_alloc(0, PFTEMP, PTE_U | PTE_P | PTE_W);
+	if (r < 0) {
+		panic("Pgfault on sys_page_alloc :%e",r);
+	}
+	
+	//copy the fault page content to temp page
+	void* addr_rounddown = ROUNDDOWN(addr, PGSIZE);
+	memmove(PFTEMP, addr_rounddown, PGSIZE);
+ 
+	//Map the new page
+	r=sys_page_map(0, (void *)PFTEMP,0, addr_rounddown ,PTE_P|PTE_U|PTE_W);	
+	if (r< 0)
+	    panic("Fault on sys_page_map:%e\n",r);
+	
+	
+	r = sys_page_unmap(0, (void*)PFTEMP);
+	if (r < 0)
+		panic("Fault on sys_page_unmap: %e \n", r);
+	//panic("pgfault not implemented");
 }
 
 //
@@ -54,7 +76,29 @@ duppage(envid_t envid, unsigned pn)
 	int r;
 
 	// LAB 4: Your code here.
-	panic("duppage not implemented");
+	//panic("duppage not implemented");
+	pte_t pte;
+
+	pte = uvpt[pn];
+	void* va = (void*)(pn * PGSIZE);
+	
+	//Check if the page is writable or copy_on_write page
+	if ((pte & PTE_W) || (pte & PTE_COW))
+	{
+		//setting the page as readonly and copy-on-write
+		if ((r= sys_page_map(0, va, envid, va , PTE_U|PTE_P|PTE_COW))<0)
+			panic("Duppage error on sys_page_map -1: readonly and COW mapping error: %e \n",r);
+		
+		//Remapping the page 
+		if ((r= sys_page_map(envid, va, 0, va , PTE_U|PTE_P|PTE_COW))<0)
+			panic("Duppage error on sys_page_map -2: readonly and COW remapping error: %e \n",r);
+	}
+	else
+	{// if it is only read-only page
+		if ((r= sys_page_map(0, va, envid, va , PTE_U|PTE_P))<0)
+			panic("Duppage error on sys_page_map -3: readonly mapping error: %e \n",r);
+	
+	}
 	return 0;
 }
 
@@ -78,8 +122,64 @@ envid_t
 fork(void)
 {
 	// LAB 4: Your code here.
-	panic("fork not implemented");
+	//panic("fork not implemented");
+	
+	//set parent process fault handler
+	set_pgfault_handler(pgfault);
+
+	envid_t envid;
+	envid = sys_exofork(); // Creating a child process
+	if (envid <  0)
+		panic("Fork process error %e \n", envid);
+	
+	if (envid == 0)
+	{ //This is the child process, hence thisenv pointing is actually representing parent enivd
+	 //we will have to change this
+		thisenv = &envs[ENVX(sys_getenvid())];
+		return 0; //this is all for child, we can return 0 and exit
+	}
+	
+	//This is the parent process. We will do the mapping of parent's pages to child's pages
+	 // copy "mapping"
+	uint32_t pnBeg = UTEXT >> PTXSHIFT;
+	uint32_t pnEnd = USTACKTOP >> PTXSHIFT;  
+	for (; pnBeg < pnEnd; ++pnBeg) 
+	{
+		// check whether current page is present
+		if (!(uvpd[pnBeg >> 10] & PTE_P)) {
+			continue;
+		}
+
+		if (!(uvpt[pnBeg] & (PTE_P | PTE_U))) {
+			continue;
+		}
+
+		duppage(envid, pnBeg);
+	}
+	int r;
+	// set child process's page fault upcall entry point just like the parent
+	if ((r = sys_env_set_pgfault_upcall(envid, thisenv->env_pgfault_upcall)) < 0) {
+		panic("Fork error on sys_env_set_pgfault_upcall: %e\n", r);
+	}
+
+	// allocate page for child's process exception stack
+	if ((r = sys_page_alloc(envid, (void*)(UXSTACKTOP - PGSIZE), PTE_U | PTE_P | PTE_W)) < 0) {
+		panic("Fork error on sys_page_alloc: %e\n", r);
+	}
+
+	if ((r = sys_env_set_status(envid, ENV_RUNNABLE)) < 0) {
+		panic("Fork error on sys_env_set_status: %e \n", r);
+	}
+
+	return envid;
+
+	
+	
 }
+
+
+// allocate a new env for child process with kernel part mapping
+	
 
 // Challenge!
 int
