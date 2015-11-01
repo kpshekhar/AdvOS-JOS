@@ -74,7 +74,7 @@ trap_init(void)
 	
 	// LAB 3: Your code here.
 	extern long int_vector_table[];
-	int i; 
+	int i,j; 
 	for (i=0; i<= T_SIMDERR;i++){
 		SETGATE(idt[i],0,GD_KT,int_vector_table[i],0);
 	}
@@ -84,6 +84,10 @@ trap_init(void)
 
 	//similarly system call is setup by the user and hence the gate should be checked with 3 
 	SETGATE(idt[T_SYSCALL], 0, GD_KT, int_vector_table[T_SYSCALL], 3);// T_SYSCALL = 3
+
+	//For IRQ interrupts
+	for(j=0;j<16;j++)
+	    SETGATE(idt[IRQ_OFFSET + j], 0, GD_KT, int_vector_table[IRQ_OFFSET + j], 3);
 
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -115,19 +119,7 @@ trap_init_percpu(void)
 	// user space on that CPU.
 	//
 	// LAB 4: Your code here:
-	
-	/*
-	ts.ts_esp0 = KSTACKTOP;
-	ts.ts_ss0 = GD_KD;
-	// Initialize the TSS slot of the gdt.
-	gdt[GD_TSS0 >> 3] = SEG16(STS_T32A, (uint32_t) (&ts),
-					sizeof(struct Taskstate), 0);
-	gdt[GD_TSS0 >> 3].sd_s = 0;
-	// Load the TSS selector (like other segment selectors, the
-	// bottom three bits are special; we leave them 0)
-	ltr(GD_TSS0);
-	// Load the IDT
-	lidt(&idt_pd);  */
+
 	
 	int i = cpunum();
 	
@@ -240,7 +232,10 @@ trap_dispatch(struct Trapframe *tf)
 	// Handle clock interrupts. Don't forget to acknowledge the
 	// interrupt using lapic_eoi() before calling the scheduler!
 	// LAB 4: Your code here.
-
+	if (tf->tf_trapno == IRQ_OFFSET + IRQ_TIMER) {
+		lapic_eoi();
+		sched_yield();
+	}
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
 	if (tf->tf_cs == GD_KT){

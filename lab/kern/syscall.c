@@ -289,7 +289,7 @@ sys_page_map(envid_t srcenvid, void *srcva,
 
 	//Check for permissions
 	if (!(perm & PTE_U) && !(perm & PTE_P) && !(perm & ~(PTE_SYSCALL)))
-		return E_INVAL; 	
+		return -E_INVAL; 	
 	
 
 	// the page is not writable but write permission is set	
@@ -381,7 +381,63 @@ static int
 sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_try_send not implemented");
+	int r; 
+	struct Env* target_env; 
+	
+	//Bad Environment
+	if ((r = envid2env(envid, &target_env, 0)) < 0)
+		return -E_BAD_ENV; 
+	
+	//If target is not receiving
+	if(!target_env->env_ipc_recving)
+		return -E_IPC_NOT_RECV;
+	
+	//If src and dst addesses are below UTOP
+	if (((uint32_t)srcva) < UTOP && (uint32_t)target_env->env_ipc_dstva < UTOP)
+	{
+		
+		//Check if srcva is page aligned
+		if ((uint32_t)srcva % PGSIZE !=0)
+			return -E_INVAL;
+	
+		//Check for permissions
+		if (!(perm & PTE_U) && !(perm & PTE_P) && !(perm & ~(PTE_SYSCALL)))
+			return -E_INVAL;
+
+		struct PageInfo* srcpage = NULL;
+
+		pte_t* pte = NULL;
+		//Lookup the page and get a pte
+		if (!(srcpage = page_lookup(curenv->env_pgdir, srcva,&pte)))
+			return -E_INVAL;
+		
+		//if (perm & PTE_W), but srcva is read-only in the
+		//current environment's address space.
+		if ((perm & PTE_W) && !(*pte & PTE_W))
+			return -E_INVAL; 
+		
+		//Page mappingto destination
+		if (target_env->env_ipc_dstva)
+		{
+			//map the page
+			if ((r = page_insert(target_env->env_pgdir, srcpage, (void *)target_env->env_ipc_dstva,perm) )< 0)
+				return -E_NO_MEM;
+			
+		}
+		
+		target_env->env_ipc_perm = perm; // is set to 'perm' if a page was transferred, 0 otherwise. 
+	}
+	else{
+		target_env->env_ipc_perm = 0; //  0 otherwise. 
+	}
+	
+	target_env->env_ipc_recving  = 0; //is set to 0 to block future sends
+	target_env->env_ipc_from = curenv->env_id; // is set to the sending envid;
+	target_env->env_tf.tf_regs.reg_eax = 0;
+	target_env->env_ipc_value = value; // is set to the 'value' parameter;
+	target_env->env_status = ENV_RUNNABLE; 
+	
+	return 0;
 }
 
 // Block until a value is ready.  Record that you want to receive
@@ -399,8 +455,25 @@ static int
 sys_ipc_recv(void *dstva)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_recv not implemented");
+	//panic("sys_ipc_recv not implemented");
+
+	//check if dstva is below UTOP
+	
+	
+	if ((uint32_t)dstva < UTOP)
+	{
+		if ((uint32_t)dstva % PGSIZE !=0)
+			return -E_INVAL;
+		curenv->env_ipc_dstva = dstva;
+	}
+	
+	//Enable receiving
+	curenv->env_ipc_recving = 1;
+	curenv->env_status = ENV_NOT_RUNNABLE;
+	sched_yield();
 	return 0;
+	
+
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
@@ -449,6 +522,12 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 
 	case SYS_env_set_pgfault_upcall:
 		return sys_env_set_pgfault_upcall((envid_t) a1, (void *)a2);
+
+	case SYS_ipc_try_send:
+		return sys_ipc_try_send(a1,a2,(void*)a3, a4);
+
+	case SYS_ipc_recv:
+		return sys_ipc_recv((void*)a1);
 		
 	default:
 		panic("Invalid System Call \n");

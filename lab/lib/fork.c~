@@ -25,9 +25,11 @@ pgfault(struct UTrapframe *utf)
 	//   (see <inc/memlayout.h>).
 
 	// LAB 4: Your code here.
-	pte_t ft_pte;
-	ft_pte = uvpt[PGNUM(addr)];
-	if (!(err & FEC_WR) || !(ft_pte & PTE_COW) )
+
+	uint32_t pn = ((uint32_t)addr)>>12;
+	const pte_t ft_pte = NULL;
+	ft_pte = uvpt[pn];
+	if (!((err & FEC_WR) && (ft_pte & PTE_COW)) )
 		panic("PGfault: %x does not have write access to copy-on-write page");
 
 	// Allocate a new page, map it at a temporary location (PFTEMP),
@@ -48,7 +50,7 @@ pgfault(struct UTrapframe *utf)
 	memmove(PFTEMP, addr_rounddown, PGSIZE);
  
 	//Map the new page
-	r=sys_page_map(0, (void *)PFTEMP,0, addr ,PTE_P|PTE_U|PTE_W);	
+	r=sys_page_map(0, (void *)PFTEMP,0, addr_rounddown ,PTE_P|PTE_U|PTE_W);	
 	if (r< 0)
 	    panic("Fault on sys_page_map:%e\n",r);
 	

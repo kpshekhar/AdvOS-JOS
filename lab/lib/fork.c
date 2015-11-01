@@ -25,9 +25,10 @@ pgfault(struct UTrapframe *utf)
 	//   (see <inc/memlayout.h>).
 
 	// LAB 4: Your code here.
-	pte_t ft_pte;
-	ft_pte = uvpt[PGNUM(addr)];
-	if (!(err & FEC_WR) || !(ft_pte & PTE_COW) )
+
+	uint32_t pn = ((uint32_t)addr)>>12;
+	const pte_t ft_pte = uvpt[pn];
+	if (!((err & FEC_WR) && (ft_pte & PTE_COW)) )
 		panic("PGfault: %x does not have write access to copy-on-write page");
 
 	// Allocate a new page, map it at a temporary location (PFTEMP),
