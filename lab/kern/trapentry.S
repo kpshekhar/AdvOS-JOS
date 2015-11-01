@@ -4,6 +4,7 @@
 #include <inc/memlayout.h>
 #include <inc/trap.h>
 
+#include <kern/picirq.h>
 
 
 ###################################################################
@@ -125,6 +126,35 @@ Two-byte SW interrupt             0-255         No
 	TRAPHANDLER_NOEC(handler_18, 18)   // machine check
 	TRAPHANDLER_NOEC(handler_19, 19)   // SIMD floating point error
 
+	TRAPHANDLER_NOEC(handler_20, 20)
+	TRAPHANDLER_NOEC(handler_21, 21)
+	TRAPHANDLER_NOEC(handler_22, 22)
+	TRAPHANDLER_NOEC(handler_23, 23)
+	TRAPHANDLER_NOEC(handler_24, 24)
+	TRAPHANDLER_NOEC(handler_25, 25)
+	TRAPHANDLER_NOEC(handler_26, 26)
+	TRAPHANDLER_NOEC(handler_27, 27)
+	TRAPHANDLER_NOEC(handler_28, 28)
+	TRAPHANDLER_NOEC(handler_29, 29)
+	TRAPHANDLER_NOEC(handler_30, 30)
+	TRAPHANDLER_NOEC(handler_31, 31)
+	TRAPHANDLER_NOEC(handler_32, 32)
+	TRAPHANDLER_NOEC(handler_33, 33)
+	TRAPHANDLER_NOEC(handler_34, 34)
+	TRAPHANDLER_NOEC(handler_35, 35)
+	TRAPHANDLER_NOEC(handler_36, 36)
+	TRAPHANDLER_NOEC(handler_37, 37)
+	TRAPHANDLER_NOEC(handler_38, 38)
+	TRAPHANDLER_NOEC(handler_39, 39)
+	TRAPHANDLER_NOEC(handler_40, 40)
+	TRAPHANDLER_NOEC(handler_41, 41)
+	TRAPHANDLER_NOEC(handler_42, 42)
+	TRAPHANDLER_NOEC(handler_43, 43)
+	TRAPHANDLER_NOEC(handler_44, 44)
+	TRAPHANDLER_NOEC(handler_45, 45)
+	TRAPHANDLER_NOEC(handler_46, 46)
+	TRAPHANDLER_NOEC(handler_47, 47)
+
 	TRAPHANDLER_NOEC(handler_48, 48)   // system call
 
 /*
@@ -179,34 +209,34 @@ int_vector_table:
 	.long handler_17
 	.long handler_18
 	.long handler_19
-	.long 20
-	.long 21
-	.long 22
-	.long 23
-	.long 24
-	.long 25
-	.long 26
-	.long 27
-	.long 28
-	.long 29
-	.long 30
-	.long 31
-	.long 32
-	.long 33
-	.long 34
-	.long 35
-	.long 36
-	.long 37
-	.long 38
-	.long 39
-	.long 40
-	.long 41
-	.long 42
-	.long 43
-	.long 44
-	.long 45
-	.long 46
-	.long 47
+	.long handler_20
+	.long handler_21
+	.long handler_22
+	.long handler_23
+	.long handler_24
+	.long handler_25
+	.long handler_26
+	.long handler_27
+	.long handler_28
+	.long handler_29
+	.long handler_30
+	.long handler_31
+	.long handler_32
+	.long handler_33
+	.long handler_34
+	.long handler_35
+	.long handler_36
+	.long handler_37
+	.long handler_38
+	.long handler_39
+	.long handler_40
+	.long handler_41
+	.long handler_42
+	.long handler_43
+	.long handler_44
+	.long handler_45
+	.long handler_46
+	.long handler_47
 	.long handler_48
 	.long 49
 	.long 50
