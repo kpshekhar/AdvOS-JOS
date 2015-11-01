@@ -260,15 +260,15 @@ f0100190:	6b 05 e4 13 23 f0 74 	imul   $0x74,0xf02313e4,%eax
 f0100197:	05 40 10 23 f0       	add    $0xf0231040,%eax
 f010019c:	39 c3                	cmp    %eax,%ebx
 f010019e:	72 a2                	jb     f0100142 <i386_init+0xa8>
+	// Starting non-boot CPUs
+	boot_aps();
+
+#if defined(TEST)
 	// Don't touch -- used by grading script!
 	ENV_CREATE(TEST, ENV_TYPE_USER);
-#else
-	// Touch all you want.
-	//ENV_CREATE(user_primes, ENV_TYPE_USER);
-	ENV_CREATE(user_sendpage, ENV_TYPE_USER);
 f01001a0:	83 ec 08             	sub    $0x8,%esp
 f01001a3:	6a 00                	push   $0x0
-f01001a5:	68 1c 72 1f f0       	push   $0xf01f721c
+f01001a5:	68 94 55 22 f0       	push   $0xf0225594
 f01001aa:	e8 bf 30 00 00       	call   f010326e <env_create>
 
 	//ENV_CREATE(user_yield, ENV_TYPE_USER);
