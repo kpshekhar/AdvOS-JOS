@@ -27,8 +27,7 @@ pgfault(struct UTrapframe *utf)
 	// LAB 4: Your code here.
 
 	uint32_t pn = ((uint32_t)addr)>>12;
-	const pte_t ft_pte = NULL;
-	ft_pte = uvpt[pn];
+	const pte_t ft_pte = uvpt[pn];
 	if (!((err & FEC_WR) && (ft_pte & PTE_COW)) )
 		panic("PGfault: %x does not have write access to copy-on-write page");
 

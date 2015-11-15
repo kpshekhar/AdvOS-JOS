@@ -152,7 +152,26 @@ sys_env_set_trapframe(envid_t envid, struct Trapframe *tf)
 	// LAB 5: Your code here.
 	// Remember to check whether the user has supplied us with a good
 	// address!
-	panic("sys_env_set_trapframe not implemented");
+	//panic("sys_env_set_trapframe not implemented");
+	struct Env *e;
+	int r;
+
+	//user_mem_assert(curenv, tf, sizeof(struct Trapframe), 0);
+	
+	if  ( (r= envid2env(envid, &e, 1)) < 0 ) {
+	    panic("Bad or stale environment in kern/syscall.c/sys_env_set_st : %e \n",r); 
+	    return r;	
+	}
+	e->env_tf = *tf;
+	e->env_tf.tf_ds |= 3;
+	e->env_tf.tf_es |= 3;
+	e->env_tf.tf_ss |= 3;
+	e->env_tf.tf_cs |= 3;
+	// Make sure CPL = 3, interrupts enabled.
+	e->env_tf.tf_eflags |= FL_IF;
+	e->env_tf.tf_eflags &= ~(FL_IOPL_MASK);
+
+	return 0;
 }
 
 // Set the page fault upcall for 'envid' by modifying the corresponding struct
@@ -540,6 +559,9 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 
 	case SYS_ipc_recv:
 		return sys_ipc_recv((void*)a1);
+
+	case SYS_env_set_trapframe:
+		return sys_env_set_trapframe(a1, (struct Trapframe *)a2);
 		
 	default:
 		panic("Invalid System Call \n");

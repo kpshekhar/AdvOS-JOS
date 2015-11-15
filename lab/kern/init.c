@@ -65,7 +65,7 @@ i386_init(void)
 	// Touch all you want.
 
 	ENV_CREATE(user_icode, ENV_TYPE_USER);
-
+	//ENV_CREATE(user_spawnhello, ENV_TYPE_USER);
 	//ENV_CREATE(user_primes, ENV_TYPE_USER);
 	//ENV_CREATE(user_sendpage, ENV_TYPE_USER);
 

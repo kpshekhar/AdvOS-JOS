@@ -83,8 +83,18 @@ duppage(envid_t envid, unsigned pn)
 	pte = uvpt[pn];
 	void* va = (void*)(pn * PGSIZE);
 	
+	//Lab 5 code start
+	// Check if PTE_SHARE is set.
+	    if (pte & PTE_SHARE) {
+	// Set new mapping as PTE_SHARE	 
+	        if ( (r=sys_page_map(0, (void *)va,envid,(void*)va, (pte & PTE_SYSCALL)) ) < 0 )
+	            panic("duppage MAP COW error, sys_page_map:%e in lib/fork.c \n",r);
+ 	             	
+	        
+	    }
+	//Lab 5 code end
 	//Check if the page is writable or copy_on_write page
-	if ((pte & PTE_W) || (pte & PTE_COW))
+	else if ((pte & PTE_W) || (pte & PTE_COW))
 	{
 		//setting the page as readonly and copy-on-write
 		if ((r= sys_page_map(0, va, envid, va , PTE_U|PTE_P|PTE_COW))<0)
