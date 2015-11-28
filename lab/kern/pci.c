@@ -24,13 +24,14 @@ struct pci_driver {
 
 // pci_attach_class matches the class and subclass of a PCI device
 struct pci_driver pci_attach_class[] = {
-	{ PCI_CLASS_BRIDGE, PCI_SUBCLASS_BRIDGE_PCI, &pci_bridge_attach },
+	{ PCI_CLASS_BRIDGE, PCI_SUBCLASS_BRIDGE_PCI, &pci_bridge_attach},
 	{ 0, 0, 0 },
 };
 
 // pci_attach_vendor matches the vendor ID and device ID of a PCI device. key1
 // and key2 should be the vendor ID and device ID respectively
 struct pci_driver pci_attach_vendor[] = {
+	{E1000_VENDOR_ID, E1000_DEVICE_ID,&e1000_attach_device}, //From the intelsection 5.2 -Table 5-1. and kern/e1000.h
 	{ 0, 0, 0 },
 };
 

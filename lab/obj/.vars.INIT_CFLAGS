@@ -1,1 +1,1 @@
--DTEST=user_primespipe
+-DTEST_NO_NS -DTEST=net_testinput
