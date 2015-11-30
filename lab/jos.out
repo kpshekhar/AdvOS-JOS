@@ -33,11 +33,11 @@ E1000 status value: 80080783
 FS is running
 FS can do I/O
 Device 1 presence: 1
-Sending ARP announcement...
 block cache is good
 superblock is good
+Sending ARP announcement...
 bitmap is good
 No runnable environments in the system!
 Welcome to the JOS kernel monitor!
 Type 'help' for a list of commands.
-qemu: terminating on signal 15 from pid 17903
+qemu: terminating on signal 15 from pid 20933
