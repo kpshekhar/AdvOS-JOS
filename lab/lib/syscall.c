@@ -122,3 +122,14 @@ sys_time_msec(void)
 {
 	return (unsigned int) syscall(SYS_time_msec, 0, 0, 0, 0, 0, 0);
 }
+
+
+int sys_net_tx_packet(char *data, int length)
+{
+
+	return syscall(SYS_net_tx_packet,1,(uint32_t) data, (int)length, 0, 0, 0);
+}
+
+
+
+

@@ -12,8 +12,8 @@
 6828 decimal is 15254 octal!
 Physical memory: 66556K available, base = 640K, extended = 65532K
 Skipped this page 7
-Check first entry of pages &pages[0] = f02e7000
-&pages[npages-1] = f03077f0
+Check first entry of pages &pages[0] = f0301000
+&pages[npages-1] = f03217f0
 check_page_free_list(1) ok cleared
 check_page_alloc() succeeded!
 check_page() succeeded!
@@ -29,32 +29,15 @@ PCI: 00:01.3: 8086:7113: class: 6.80 (Bridge device) irq: 9
 PCI: 00:02.0: 1013:00b8: class: 3.0 (Display controller) irq: 0
 PCI: 00:03.0: 8086:100e: class: 2.0 (Network controller) irq: 11
 PCI function 00:03.0 (8086:100e) enabled
+E1000 status value: 80080783
 FS is running
 FS can do I/O
 Device 1 presence: 1
+Sending ARP announcement...
 block cache is good
 superblock is good
 bitmap is good
-Sending ARP announcement...
-[00001001] user panic in testinput at lib/ipc.c:67: IPC_send error :bad environment
+No runnable environments in the system!
 Welcome to the JOS kernel monitor!
 Type 'help' for a list of commands.
-TRAP frame at 0xf030807c from CPU 0
-  edi  0x00001002
-  esi  0x00802cc0
-  ebp  0xeebfdef0
-  oesp 0xf02acfdc
-  ebx  0xeebfdf04
-  edx  0xeebfdda8
-  ecx  0x00000001
-  eax  0x00000001
-  es   0x----0023
-  ds   0x----0023
-  trap 0x00000003 Breakpoint
-  err  0x00000000
-  eip  0x008007e8
-  cs   0x----001b
-  flag 0x00000286
-  esp  0xeebfdee8
-  ss   0x----0023
-qemu: terminating on signal 15 from pid 25796
+qemu: terminating on signal 15 from pid 17903
