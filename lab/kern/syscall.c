@@ -532,6 +532,18 @@ sys_net_tx_packet(char *data, int length)
 }
 
 
+//Set
+static int
+sys_net_rx_data(char *data)
+{
+	if ((uintptr_t) data >= UTOP)
+		return -E_INVAL;
+
+	return  e1000_Receive_data(data);
+
+}
+
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -593,6 +605,9 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 
 	case SYS_net_tx_packet:
 		return sys_net_tx_packet((char *)a1, (int)a2);
+	
+	case SYS_net_rx_data:
+		return sys_net_rx_data((char *)a1);
 		
 	default:
 		panic("Invalid System Call \n");

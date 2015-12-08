@@ -1,1 +1,1 @@
--DTEST_NO_NS -DTEST=net_testinput
+-DTEST=user_httpd
