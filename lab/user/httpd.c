@@ -10,6 +10,8 @@
 
 #define BUFFSIZE 512
 #define MAXPENDING 5	// Max connection requests
+#define ETH_PCKT_SIZE 1518
+
 
 struct http_request {
 	int sock;
@@ -77,7 +79,32 @@ static int
 send_data(struct http_request *req, int fd)
 {
 	// LAB 6: Your code here.
-	panic("send_data not implemented");
+	//panic("send_data not implemented");
+	char buffer[ETH_PCKT_SIZE];
+	int err;  //Error code
+
+	struct Stat stat;  //declare stat file
+
+	//If fd isn't correct
+	if ((err = fstat(fd, &stat)) < 0) {
+		die("Error in send_data in user/httpd.c: fstat failed\n");
+	}
+	
+	//If the size is more than ethernet packet size
+	if (stat.st_size > ETH_PCKT_SIZE) {
+		die("Error in send_data in user/httpd.c: size more than max ethernt size (1518 bytes).\n");
+	}
+
+	if ((err = readn(fd, buffer, stat.st_size)) != stat.st_size) {
+		die("Error in send_data in user/httpd.c: complete data read failed\n");
+	}
+
+	if ((err = write(req->sock, buffer, stat.st_size)) != stat.st_size) {
+		die("Error in send_data in user/httpd.c: Incomplete write\n");
+	}
+
+	return 0;
+	
 }
 
 static int
@@ -223,7 +250,31 @@ send_file(struct http_request *req)
 	// set file_size to the size of the file
 
 	// LAB 6: Your code here.
-	panic("send_file not implemented");
+	//panic("send_file not implemented");
+	                                              
+    struct Stat stat;
+
+	if ((fd = open(req->url, O_RDONLY)) < 0) {
+		send_error(req, 404);  // HTTP page not found
+		r = fd;
+		goto end;
+	}
+
+	if ((r = fstat(fd, &stat)) < 0) {
+		goto end;
+	}
+
+	if (stat.st_isdir) {
+		send_error(req, 404); // HTTP page not found
+		r = -1;
+		goto end;
+	}
+
+	file_size = stat.st_size;
+
+
+	 
+
 
 	if ((r = send_header(req, 200)) < 0)
 		goto end;

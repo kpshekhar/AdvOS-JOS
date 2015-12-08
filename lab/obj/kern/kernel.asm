@@ -141,10 +141,10 @@ f010009e:	83 ec 08             	sub    $0x8,%esp
 	// This ensures that all static/global variables start out zero.
 	memset(edata, 0, end - edata);
 f01000a1:	b8 c0 37 34 f0       	mov    $0xf03437c0,%eax
-f01000a6:	2d 3c 83 2a f0       	sub    $0xf02a833c,%eax
+f01000a6:	2d 58 83 2a f0       	sub    $0xf02a8358,%eax
 f01000ab:	50                   	push   %eax
 f01000ac:	6a 00                	push   $0x0
-f01000ae:	68 3c 83 2a f0       	push   $0xf02a833c
+f01000ae:	68 58 83 2a f0       	push   $0xf02a8358
 f01000b3:	e8 9a 53 00 00       	call   f0105452 <memset>
 
 	// Initialize the console.
@@ -203,7 +203,7 @@ f010010d:	77 16                	ja     f0100125 <i386_init+0x8b>
 		_panic(file, line, "KADDR called with invalid pa %08lx", pa);
 f010010f:	68 00 70 00 00       	push   $0x7000
 f0100114:	68 24 6b 10 f0       	push   $0xf0106b24
-f0100119:	6a 74                	push   $0x74
+f0100119:	6a 75                	push   $0x75
 f010011b:	68 87 6b 10 f0       	push   $0xf0106b87
 f0100120:	e8 1b ff ff ff       	call   f0100040 <_panic>
 	void *code;
@@ -284,14 +284,14 @@ f01001b4:	e8 ca 30 00 00       	call   f0103283 <env_create>
 	ENV_CREATE(net_ns, ENV_TYPE_NS);
 f01001b9:	83 c4 08             	add    $0x8,%esp
 f01001bc:	6a 02                	push   $0x2
-f01001be:	68 6c c9 22 f0       	push   $0xf022c96c
+f01001be:	68 88 c9 22 f0       	push   $0xf022c988
 f01001c3:	e8 bb 30 00 00       	call   f0103283 <env_create>
-
-	
-	
-#if defined(TEST)
-	// Don't touch -- used by grading script!
 	ENV_CREATE(TEST, ENV_TYPE_USER);
+#else
+	// Touch all you want.
+
+	//ENV_CREATE(user_icode, ENV_TYPE_USER);
+	ENV_CREATE(user_httpd, ENV_TYPE_USER);
 f01001c8:	83 c4 08             	add    $0x8,%esp
 f01001cb:	6a 00                	push   $0x0
 f01001cd:	68 88 47 1f f0       	push   $0xf01f4788
@@ -332,7 +332,7 @@ f01001f1:	77 15                	ja     f0100208 <mp_main+0x27>
 		_panic(file, line, "PADDR called with invalid kva %08lx", kva);
 f01001f3:	50                   	push   %eax
 f01001f4:	68 48 6b 10 f0       	push   $0xf0106b48
-f01001f9:	68 8b 00 00 00       	push   $0x8b
+f01001f9:	68 8c 00 00 00       	push   $0x8c
 f01001fe:	68 87 6b 10 f0       	push   $0xf0106b87
 f0100203:	e8 38 fe ff ff       	call   f0100040 <_panic>
 	return (physaddr_t)kva - KERNBASE;
@@ -1354,8 +1354,8 @@ f0100856:	68 78 6f 10 f0       	push   $0xf0106f78
 f010085b:	e8 f9 2f 00 00       	call   f0103859 <cprintf>
 	cprintf("  edata  %08x (virt)  %08x (phys)\n", edata, edata - KERNBASE);
 f0100860:	83 c4 0c             	add    $0xc,%esp
-f0100863:	68 3c 83 2a 00       	push   $0x2a833c
-f0100868:	68 3c 83 2a f0       	push   $0xf02a833c
+f0100863:	68 58 83 2a 00       	push   $0x2a8358
+f0100868:	68 58 83 2a f0       	push   $0xf02a8358
 f010086d:	68 9c 6f 10 f0       	push   $0xf0106f9c
 f0100872:	e8 e2 2f 00 00       	call   f0103859 <cprintf>
 	cprintf("  end    %08x (virt)  %08x (phys)\n", end, end - KERNBASE);

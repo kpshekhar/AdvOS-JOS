@@ -2,6 +2,8 @@
 
 extern union Nsipc nsipcbuf;
 
+#define BUFR_LENGTH 2048
+
 void
 input(envid_t ns_envid)
 {
@@ -15,25 +17,33 @@ input(envid_t ns_envid)
 	// another packet in to the same physical page.
 
 
-	#define RECV_BUFFER_SIZE 2048
-	char buf[RECV_BUFFER_SIZE];
+	
+	char buf[BUFR_LENGTH];
 
-	int len, r, i;
+	int len, err;
 	int perm = PTE_U | PTE_P | PTE_W;
-	len = RECV_BUFFER_SIZE -1;
+	len = BUFR_LENGTH -1;
+	unsigned now, end;
 
-	while (1) {
-		while ((r = sys_net_rx_data(buf)) < 0) {
+	while (true) {
+		if ((err = sys_net_rx_data(buf)) < 0) {
 			sys_yield();
+			continue;
 		}
-		len = r;
-		// Whenever a new page is allocated, old will be deallocated
-		// by page_insert automatically.
-		while ((r = sys_page_alloc(0, &nsipcbuf, perm)) < 0);
+		len = err; //If err is more than 0 that means it contains length 
+
+		//Calling the same page reference will automatically deallocate earlier page and reallocate new page
+		while ((err = sys_page_alloc(0, &nsipcbuf, perm)) < 0);
 
 		nsipcbuf.pkt.jp_len = len;
 		memmove(nsipcbuf.pkt.jp_data, buf, len);
+		
+	//IPC_SEND the data buffer. 
+		ipc_send(ns_envid, (uint32_t)NSREQ_INPUT, &nsipcbuf, perm);
 
-		while ((r = sys_ipc_try_send(ns_envid, NSREQ_INPUT, &nsipcbuf, perm)) < 0);
+	//Tried to insert a small delay before reading another packet. Might not be an effective solution
+		now = sys_time_msec();
+		end = now + 1 * 100;
+		while (sys_time_msec() < end);
 	}
 }

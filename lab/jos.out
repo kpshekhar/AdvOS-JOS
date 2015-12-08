@@ -34,24 +34,4 @@ Waiting for http connections...
 Length is: 60
 Length is: 60
 Length is: 187
-[00001002] user panic in jhttpd at user/httpd.c:226: send_file not implemented
-Welcome to the JOS kernel monitor!
-Type 'help' for a list of commands.
-TRAP frame at 0xf03660f8 from CPU 0
-  edi  0xeebfdd60
-  esi  0x00802abf
-  ebp  0xeebfdb40
-  oesp 0xf02b2fdc
-  ebx  0xeebfdb54
-  edx  0xeebfd9f8
-  ecx  0x00000001
-  eax  0x00000001
-  es   0x----0023
-  ds   0x----0023
-  trap 0x00000003 Breakpoint
-  err  0x00000000
-  eip  0x0080064b
-  cs   0x----001b
-  flag 0x00000282
-  esp  0xeebfdb38
-  ss   0x----0023
+qemu: terminating on signal 15 from pid 27030
